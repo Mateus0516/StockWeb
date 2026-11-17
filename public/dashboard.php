@@ -146,6 +146,7 @@ function e($valor) {
                 Bem-vindo, <?= e($nome) ?>!
                 Gerencie seu estoque em um só lugar.
             </p>
+            <a href="fornecedores.php" class="btn btn-outline-primary">Fornecedores</a>
         </div>
 
         <!-- Indicadores -->
