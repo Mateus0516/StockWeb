@@ -1,27 +1,13 @@
-
 <?php
-session_start();
+require_once __DIR__ . '/categoria_funcoes.php';
 
-// Protege a página contra acesso sem login
-if (!isset($_SESSION['usuario_id'])) {
-    header('Location: login.php');
-    exit;
-}
-
-// Gera o token de proteção CSRF
-if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
-
-// Proteção contra HTML malicioso
-function e($valor) {
-    return htmlspecialchars(
-        (string) $valor,
-        ENT_QUOTES,
-        'UTF-8'
-    );
-}
-
+$editando = isset($categoria);
+$destino = $editando ? 'categoria_editar.php?id=' . $id : 'categoria_nova.php';
+$aviso = categoriaAviso($destino);
+$dados = $aviso['dados'] ?? $categoria ?? ['nome' => '', 'descricao' => ''];
+$titulo = $editando ? 'Editar Categoria' : 'Nova Categoria';
+$acao = $editando ? 'categoria_atualizar.php' : 'categoria_salvar.php';
+$token = categoriaToken();
 $nomeUsuario = $_SESSION['usuario_nome'] ?? 'Usuário';
 ?>
 <!DOCTYPE html>
@@ -35,7 +21,7 @@ $nomeUsuario = $_SESSION['usuario_nome'] ?? 'Usuário';
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Nova Categoria | StockWeb</title>
+    <title><?= e($titulo) ?> | StockWeb</title>
 
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
@@ -94,14 +80,16 @@ $nomeUsuario = $_SESSION['usuario_nome'] ?? 'Usuário';
         <div class="mb-4">
 
             <h1 class="fw-bold">
-                Nova Categoria
+                <?= e($titulo) ?>
             </h1>
 
             <p class="text-muted">
-                Cadastre uma nova categoria para organizar os produtos.
+                <?= $editando ? 'Atualize os dados da categoria.' : 'Cadastre uma nova categoria para organizar os produtos.' ?>
             </p>
 
         </div>
+
+        <?php categoriaExibirAviso($aviso); ?>
 
         <!-- Formulário -->
         <div class="card form-card shadow-sm">
@@ -109,7 +97,7 @@ $nomeUsuario = $_SESSION['usuario_nome'] ?? 'Usuário';
             <div class="card-body p-4">
 
                 <form
-                    action="categoria_salvar.php"
+                    action="<?= e($acao) ?>"
                     method="POST"
                 >
 
@@ -117,8 +105,12 @@ $nomeUsuario = $_SESSION['usuario_nome'] ?? 'Usuário';
                     <input
                         type="hidden"
                         name="csrf_token"
-                        value="<?= e($_SESSION['csrf_token']) ?>"
+                        value="<?= e($token) ?>"
                     >
+
+                    <?php if ($editando): ?>
+                        <input type="hidden" name="id" value="<?= (int) $id ?>">
+                    <?php endif; ?>
 
                     <!-- Nome -->
                     <div class="mb-3">
@@ -135,6 +127,7 @@ $nomeUsuario = $_SESSION['usuario_nome'] ?? 'Usuário';
                             id="nome"
                             name="nome"
                             class="form-control"
+                            value="<?= e($dados['nome']) ?>"
                             maxlength="100"
                             placeholder="Ex.: Equipamentos de Rede"
                             required
@@ -158,7 +151,7 @@ $nomeUsuario = $_SESSION['usuario_nome'] ?? 'Usuário';
                             class="form-control"
                             rows="4"
                             placeholder="Descreva os produtos desta categoria"
-                        ></textarea>
+                        ><?= e($dados['descricao']) ?></textarea>
 
                         <div class="form-text">
                             Campo opcional.
@@ -167,7 +160,7 @@ $nomeUsuario = $_SESSION['usuario_nome'] ?? 'Usuário';
                     </div>
 
                     <!-- Botões -->
-                    <div class="d-flex justify-content-end gap-2">
+                    <div class="d-flex flex-wrap justify-content-end gap-2">
 
                         <a
                             href="categorias.php"
@@ -180,7 +173,7 @@ $nomeUsuario = $_SESSION['usuario_nome'] ?? 'Usuário';
                             type="submit"
                             class="btn btn-primary"
                         >
-                            Salvar categoria
+                            <?= $editando ? 'Salvar alterações' : 'Salvar categoria' ?>
                         </button>
 
                     </div>

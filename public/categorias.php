@@ -1,41 +1,28 @@
 <?php
-session_start();
-
-// Verifica se o usuário está autenticado
-if (!isset($_SESSION['usuario_id'])) {
-    header('Location: login.php');
-    exit;
-}
+require_once __DIR__ . '/categoria_funcoes.php';
 
 // Conexão com o banco
 require_once '/var/www/stockweb/config/database.php';
 
-// Busca categorias e quantidade de produtos ativos
+// Mantém a contagem de ativos e verifica todos os vínculos.
 $stmt = $pdo->query("
     SELECT
         c.id,
         c.nome,
         c.descricao,
-        COUNT(p.id) AS total_produtos
+        COUNT(CASE WHEN p.ativo = 1 THEN p.id END) AS total_produtos,
+        COUNT(p.id) AS total_vinculos
     FROM categorias c
     LEFT JOIN produtos p
         ON p.categoria_id = c.id
-        AND p.ativo = 1
     GROUP BY c.id, c.nome, c.descricao
     ORDER BY c.nome ASC
 ");
 
 $categorias = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Proteção contra HTML malicioso
-function e($valor) {
-    return htmlspecialchars(
-        (string) $valor,
-        ENT_QUOTES,
-        'UTF-8'
-    );
-}
-
+$aviso = categoriaAviso('categorias.php');
+$token = categoriaToken();
 $nomeUsuario = $_SESSION['usuario_nome'] ?? 'Usuário';
 ?>
 <!DOCTYPE html>
@@ -113,14 +100,9 @@ $nomeUsuario = $_SESSION['usuario_nome'] ?? 'Usuário';
                 </p>
             </div>
 
-            <button
-                class="btn btn-primary"
-                type="button"
-                disabled
-                title="Cadastro será implementado na próxima etapa"
-            >
+            <a href="categoria_nova.php" class="btn btn-primary">
                 + Nova categoria
-            </button>
+            </a>
 
         </div>
 
@@ -131,6 +113,8 @@ $nomeUsuario = $_SESSION['usuario_nome'] ?? 'Usuário';
                 Voltar ao painel
             </a>
         </div>
+
+        <?php categoriaExibirAviso($aviso); ?>
 
         <!-- Total de categorias -->
         <div class="alert alert-primary">
@@ -191,13 +175,30 @@ $nomeUsuario = $_SESSION['usuario_nome'] ?? 'Usuário';
                                         </td>
 
                                         <td>
-                                            <button
-                                                type="button"
-                                                class="btn btn-outline-primary btn-sm"
-                                                disabled
-                                            >
-                                                Editar
-                                            </button>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <a href="categoria_editar.php?id=<?= (int) $categoria['id'] ?>"
+                                                   class="btn btn-outline-primary btn-sm">
+                                                    Editar
+                                                </a>
+                                                <?php if ((int) $categoria['total_vinculos'] > 0): ?>
+                                                    <button type="button" class="btn btn-outline-danger btn-sm"
+                                                            disabled aria-describedby="vinculos-<?= (int) $categoria['id'] ?>">
+                                                        Excluir
+                                                    </button>
+                                                    <small id="vinculos-<?= (int) $categoria['id'] ?>" class="text-muted w-100">
+                                                        Há produtos vinculados.
+                                                    </small>
+                                                <?php else: ?>
+                                                    <form method="POST" action="categoria_excluir.php"
+                                                          onsubmit="return confirm('Excluir esta categoria?');">
+                                                        <input type="hidden" name="csrf_token" value="<?= e($token) ?>">
+                                                        <input type="hidden" name="id" value="<?= (int) $categoria['id'] ?>">
+                                                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                            Excluir
+                                                        </button>
+                                                    </form>
+                                                <?php endif; ?>
+                                            </div>
                                         </td>
 
                                     </tr>
