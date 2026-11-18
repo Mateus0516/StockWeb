@@ -32,7 +32,7 @@ function e($valor) {
     );
 }
 
-$nomeUsuario = $_SESSION['usuario_nome'] ?? 'Usuário';
+require_once '/var/www/stockweb/includes/layout.php';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -52,40 +52,16 @@ $nomeUsuario = $_SESSION['usuario_nome'] ?? 'Usuário';
             background-color: #f4f6fa;
         }
 
-        .navbar {
-            background-color: #0d6efd;
-        }
-
         .form-card {
             border: none;
             border-radius: 16px;
         }
     </style>
+    <?php stockwebLayoutEstilos(); ?>
 </head>
 
 <body>
-
-    <!-- Barra superior -->
-    <nav class="navbar navbar-dark">
-        <div class="container">
-
-            <a class="navbar-brand fw-bold" href="dashboard.php">
-                StockWeb
-            </a>
-
-            <div class="d-flex align-items-center gap-3">
-                <span class="text-white d-none d-sm-inline">
-                    <?= e($nomeUsuario) ?>
-                </span>
-
-                <a href="logout.php" class="btn btn-outline-light btn-sm">
-                    Sair
-                </a>
-            </div>
-
-        </div>
-    </nav>
-
+    <?php stockwebLayoutAbrir('produtos'); ?>
     <main class="container py-5">
 
         <div class="mb-4">
@@ -271,5 +247,6 @@ $nomeUsuario = $_SESSION['usuario_nome'] ?? 'Usuário';
 
     </main>
 
+    <?php stockwebLayoutFechar(); ?>
 </body>
 </html>

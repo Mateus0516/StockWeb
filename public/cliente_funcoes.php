@@ -50,6 +50,8 @@ function clienteAviso($destino) {
     return $aviso;
 }
 
+require_once '/var/www/stockweb/includes/layout.php';
+
 function clienteCabecalho($titulo, $aviso) {
     ?>
 <!DOCTYPE html>
@@ -60,19 +62,10 @@ function clienteCabecalho($titulo, $aviso) {
     <title><?= clienteEscapar($titulo) ?> | StockWeb</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>body { background-color: #f4f6fa; }</style>
+    <?php stockwebLayoutEstilos(); ?>
 </head>
 <body>
-    <nav class="navbar navbar-dark bg-primary">
-        <div class="container">
-            <a href="dashboard.php" class="navbar-brand fw-bold">StockWeb</a>
-            <div class="d-flex align-items-center gap-3">
-                <span class="text-white d-none d-sm-inline">
-                    <?= clienteEscapar($_SESSION['usuario_nome'] ?? 'Usuário') ?>
-                </span>
-                <a href="logout.php" class="btn btn-outline-light btn-sm">Sair</a>
-            </div>
-        </div>
-    </nav>
+    <?php stockwebLayoutAbrir('clientes'); ?>
     <main class="container py-5">
         <?php if ($aviso !== null): ?>
             <div class="alert alert-<?= clienteEscapar($aviso['tipo']) ?>" role="alert">
@@ -88,6 +81,7 @@ function clienteRodape() {
     <footer class="text-center text-muted py-4">
         <small>StockWeb © 2026 — Gerenciamento de Estoque</small>
     </footer>
+    <?php stockwebLayoutFechar(); ?>
 </body>
 </html>
     <?php

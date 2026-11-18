@@ -23,7 +23,7 @@ $categorias = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $aviso = categoriaAviso('categorias.php');
 $token = categoriaToken();
-$nomeUsuario = $_SESSION['usuario_nome'] ?? 'Usuário';
+require_once '/var/www/stockweb/includes/layout.php';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -45,45 +45,17 @@ $nomeUsuario = $_SESSION['usuario_nome'] ?? 'Usuário';
             background-color: #f4f6fa;
         }
 
-        .navbar {
-            background-color: #0d6efd;
-        }
-
         .table-card {
             border: none;
             border-radius: 15px;
             overflow: hidden;
         }
     </style>
+    <?php stockwebLayoutEstilos(); ?>
 </head>
 
 <body>
-
-    <!-- Navegação -->
-    <nav class="navbar navbar-dark">
-        <div class="container">
-
-            <a class="navbar-brand fw-bold"
-               href="dashboard.php">
-                StockWeb
-            </a>
-
-            <div class="d-flex align-items-center gap-3">
-
-                <span class="text-white d-none d-sm-inline">
-                    <?= e($nomeUsuario) ?>
-                </span>
-
-                <a href="logout.php"
-                   class="btn btn-outline-light btn-sm">
-                    Sair
-                </a>
-
-            </div>
-
-        </div>
-    </nav>
-
+    <?php stockwebLayoutAbrir('categorias'); ?>
     <main class="container py-5">
 
         <!-- Cabeçalho -->
@@ -223,5 +195,6 @@ $nomeUsuario = $_SESSION['usuario_nome'] ?? 'Usuário';
         </small>
     </footer>
 
+    <?php stockwebLayoutFechar(); ?>
 </body>
 </html>

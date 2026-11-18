@@ -56,6 +56,7 @@ function e($valor) {
         'UTF-8'
     );
 }
+require_once '/var/www/stockweb/includes/layout.php';
 ?>
 
 <!DOCTYPE html>
@@ -75,10 +76,6 @@ function e($valor) {
     <style>
         body {
             background-color: #f4f6fa;
-        }
-
-        .navbar {
-            background-color: #0d6efd;
         }
 
         .dashboard-card {
@@ -107,36 +104,11 @@ function e($valor) {
             overflow: hidden;
         }
     </style>
+    <?php stockwebLayoutEstilos(); ?>
 </head>
 
 <body>
-
-    <!-- Barra superior -->
-    <nav class="navbar navbar-dark">
-        <div class="container">
-
-            <a class="navbar-brand fw-bold" href="dashboard.php">
-                StockWeb
-            </a>
-
-            <div class="d-flex align-items-center gap-3">
-
-                <span class="text-white d-none d-sm-inline">
-                    <?= e($nome) ?>
-                </span>
-
-                <a
-                    href="logout.php"
-                    class="btn btn-outline-light btn-sm"
-                >
-                    Sair
-                </a>
-
-            </div>
-        </div>
-    </nav>
-
-    <!-- Conteúdo principal -->
+    <?php stockwebLayoutAbrir('dashboard'); ?>
     <main class="container py-5">
 
         <div class="mb-4">
@@ -146,10 +118,6 @@ function e($valor) {
                 Bem-vindo, <?= e($nome) ?>!
                 Gerencie seu estoque em um só lugar.
             </p>
-            <div class="d-flex flex-wrap gap-2">
-                <a href="fornecedores.php" class="btn btn-outline-primary">Fornecedores</a>
-                <a href="clientes.php" class="btn btn-outline-primary">Clientes</a>
-            </div>
         </div>
 
         <!-- Indicadores -->
@@ -378,5 +346,6 @@ function e($valor) {
         </small>
     </footer>
 
+    <?php stockwebLayoutFechar(); ?>
 </body>
 </html>
