@@ -1,4 +1,9 @@
+<?php
+session_start();
 
+$erroLogin = $_SESSION['erro_login'] ?? null;
+unset($_SESSION['erro_login']);
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -31,6 +36,12 @@
                         <h2 class="h4 fw-bold mb-4">
                             Entrar no sistema
                         </h2>
+
+                        <?php if (is_string($erroLogin) && $erroLogin !== ''): ?>
+                            <div class="alert alert-danger" role="alert">
+                                <?= htmlspecialchars($erroLogin, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>
+                            </div>
+                        <?php endif; ?>
 
                         <form action="autenticar.php" method="POST">
 

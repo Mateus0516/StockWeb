@@ -136,7 +136,7 @@ docker run -d --name stockweb-php \
   stockweb-php
 ```
 
-Abra [http://localhost:8081](http://localhost:8081) e use o acesso de demonstração abaixo. Em usos posteriores, parta da instalação existente com `docker start stockweb-mysql` e depois `docker start stockweb-php`. O volume guarda os dados entre execuções.
+Acesse [http://localhost:8081](http://localhost:8081) e entre com a conta de demonstração abaixo. Se já houver uma sessão autenticada, a página inicial abre o Dashboard. Em usos posteriores, parta da instalação existente com `docker start stockweb-mysql` e depois `docker start stockweb-php`. O volume guarda os dados entre execuções.
 
 ## Acesso de demonstração
 
@@ -193,9 +193,7 @@ Para salvar uma listagem, abra **Relatórios**, selecione a aba e aplique os fil
 
 ## Documentação acadêmica
 
-Artefatos previstos para inclusão na entrega:
-
-- Histórias de usuários.
-- Protótipo.
-- Modelo Entidade-Relacionamento (MER).
-- Dicionário de dados.
+- [Modelo Entidade-Relacionamento (MER)](docs/MER.md)
+- [Dicionário de dados](docs/DICIONARIO_DADOS.md)
+- [Histórias de usuários](docs/HISTORIAS_USUARIOS.md)
+- [Protótipo visual](docs/PROTOTIPO.md)
