@@ -1,0 +1,53 @@
+@page {
+    size: A4 landscape;
+    margin: 12mm;
+}
+
+@media print {
+    .report-print {
+        color: #212529;
+        background: #fff;
+        font-size: 10pt;
+    }
+
+    .report-print .container {
+        width: 100%;
+        max-width: none;
+        padding: 0 !important;
+    }
+
+    .report-print h2 {
+        break-after: avoid;
+    }
+
+    .report-print .report-card {
+        border: 1px solid #ced4da !important;
+        box-shadow: none !important;
+        break-inside: avoid;
+    }
+
+    .report-print .report-table {
+        overflow: visible;
+    }
+
+    .report-print .report-table thead {
+        display: table-header-group;
+    }
+
+    .report-print .report-table tr {
+        break-inside: avoid;
+    }
+
+    .report-print .table-warning {
+        print-color-adjust: exact;
+    }
+
+    .report-print td,
+    .report-print th {
+        overflow-wrap: anywhere;
+    }
+
+    .report-print .d-print-none {
+        display: none !important;
+    }
+}
