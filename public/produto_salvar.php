@@ -14,19 +14,17 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Validação do token CSRF
-if (
-    empty($_SESSION['csrf_token']) ||
-    empty($_POST['csrf_token']) ||
-    !hash_equals(
-        $_SESSION['csrf_token'],
-        (string) $_POST['csrf_token']
-    )
+$tokenSessao = $_SESSION['csrf_token'] ?? null;
+$tokenFormulario = $_POST['csrf_token'] ?? null;
+if (!is_string($tokenSessao) || $tokenSessao === '' || !is_string($tokenFormulario) ||
+    !hash_equals($tokenSessao, $tokenFormulario)
 ) {
     http_response_code(403);
     exit('Formulário inválido. Atualize a página e tente novamente.');
 }
 
 require_once '/var/www/stockweb/config/database.php';
+require_once '/var/www/stockweb/includes/movimentacao_registro.php';
 
 // Recebe os dados do formulário
 $nome = trim((string) ($_POST['nome'] ?? ''));
@@ -62,9 +60,11 @@ if (
     $quantidade === false ||
     $quantidade === null ||
     $quantidade < 0 ||
+    $quantidade > ESTOQUE_MAXIMO ||
     $estoqueMinimo === false ||
     $estoqueMinimo === null ||
     $estoqueMinimo < 0 ||
+    $estoqueMinimo > ESTOQUE_MAXIMO ||
     $categoriaId === false ||
     $categoriaId === null ||
     $categoriaId <= 0 ||
@@ -99,6 +99,8 @@ try {
         exit('Fornecedor inválido.');
     }
 
+    $pdo->beginTransaction();
+
     // Salva o produto usando parâmetros seguros
     $stmt = $pdo->prepare("
         INSERT INTO produtos (
@@ -122,11 +124,20 @@ try {
         $fornecedorId
     ]);
 
+    if ($quantidade > 0) {
+        movimentacaoRegistrar($pdo, (int) $pdo->lastInsertId(), (int) $_SESSION['usuario_id'], 'ENTRADA', $quantidade, 'Estoque inicial no cadastro do produto');
+    }
+    $pdo->commit();
+
     // Redireciona após cadastrar
     header('Location: produtos.php?sucesso=1');
     exit;
 
 } catch (PDOException $e) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+
     error_log($e->getMessage());
 
     http_response_code(500);

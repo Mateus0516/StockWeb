@@ -87,6 +87,7 @@ require_once '/var/www/stockweb/includes/layout.php';
                     name="id"
                     value="<?= (int) $produto['id'] ?>"
                 >
+                <input type="hidden" name="quantidade_original" value="<?= (int) $produto['quantidade'] ?>">
 
                 <div class="mb-3">
                     <label for="nome" class="form-label">

@@ -19,6 +19,7 @@ $tokenFormulario = $_POST['csrf_token'] ?? null;
 
 if (
     !is_string($tokenSessao) ||
+    $tokenSessao === '' ||
     !is_string($tokenFormulario) ||
     !hash_equals($tokenSessao, $tokenFormulario)
 ) {
@@ -28,6 +29,7 @@ if (
 
 // Conexão com o banco de dados
 require_once '/var/www/stockweb/config/database.php';
+require_once '/var/www/stockweb/includes/movimentacao_registro.php';
 
 // Recebe os dados enviados
 $id = filter_var(
@@ -43,6 +45,12 @@ $quantidade = filter_var(
     $_POST['quantidade'] ?? null,
     FILTER_VALIDATE_INT
 );
+
+$quantidadeOriginal = isset($_POST['quantidade_original'])
+    ? filter_var($_POST['quantidade_original'], FILTER_VALIDATE_INT, [
+        'options' => ['min_range' => 0, 'max_range' => ESTOQUE_MAXIMO],
+    ])
+    : null;
 
 $estoqueMinimo = filter_var(
     $_POST['estoque_minimo'] ?? null,
@@ -73,8 +81,11 @@ if (
     !$precoValido ||
     $quantidade === false || $quantidade === null ||
     $quantidade < 0 ||
+    $quantidade > ESTOQUE_MAXIMO ||
+    $quantidadeOriginal === false ||
     $estoqueMinimo === false || $estoqueMinimo === null ||
     $estoqueMinimo < 0 ||
+    $estoqueMinimo > ESTOQUE_MAXIMO ||
     $categoriaId === false || $categoriaId === null ||
     $categoriaId <= 0 ||
     $fornecedorId === false || $fornecedorId === null ||
@@ -85,19 +96,35 @@ if (
 }
 
 try {
+    $pdo->beginTransaction();
 
-    // Verifica se o produto existe e está ativo
+    // Bloqueia o saldo antes de calcular a diferença da edição.
     $stmt = $pdo->prepare("
-        SELECT id
+        SELECT quantidade
         FROM produtos
         WHERE id = ? AND ativo = 1
+        FOR UPDATE
     ");
 
     $stmt->execute([$id]);
 
-    if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
+    $saldoAtual = $stmt->fetchColumn();
+    if ($saldoAtual === false) {
+        $pdo->rollBack();
         http_response_code(404);
         exit('Produto não encontrado ou inativo.');
+    }
+
+    $saldoAtual = (int) $saldoAtual;
+    if ($quantidadeOriginal !== null && $quantidadeOriginal !== $saldoAtual) {
+        if ($quantidade !== $quantidadeOriginal) {
+            $pdo->rollBack();
+            http_response_code(409);
+            exit('O estoque foi alterado enquanto você editava o produto. Abra o formulário novamente para conferir o saldo atual.');
+        }
+
+        // Uma edição dos demais campos preserva movimentações ocorridas desde a abertura do formulário.
+        $quantidade = $saldoAtual;
     }
 
     // Verifica se a categoria existe
@@ -110,6 +137,7 @@ try {
     $stmt->execute([$categoriaId]);
 
     if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
+        $pdo->rollBack();
         http_response_code(422);
         exit('Categoria inválida.');
     }
@@ -124,6 +152,7 @@ try {
     $stmt->execute([$fornecedorId]);
 
     if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
+        $pdo->rollBack();
         http_response_code(422);
         exit('Fornecedor inválido.');
     }
@@ -155,11 +184,27 @@ try {
         ':id' => $id
     ]);
 
+    $diferenca = $quantidade - $saldoAtual;
+    if ($diferenca !== 0) {
+        movimentacaoRegistrar(
+            $pdo,
+            $id,
+            (int) $_SESSION['usuario_id'],
+            $diferenca > 0 ? 'ENTRADA' : 'SAIDA',
+            abs($diferenca),
+            'Ajuste de estoque na edição do produto'
+        );
+    }
+    $pdo->commit();
+
     // Redireciona após a atualização
     header('Location: produtos.php?atualizado=1');
     exit;
 
 } catch (PDOException $e) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
 
     // Registra o erro sem expor informações do banco
     error_log(

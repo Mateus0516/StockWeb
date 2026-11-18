@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/movimentacao_registro.php';
+
 function vendaRegistrar(PDO $pdo, int $clienteId, int $usuarioId, array $quantidades): int {
     // Trava cada produto em ordem de ID para serializar vendas concorrentes.
     ksort($quantidades, SORT_NUMERIC);
@@ -44,6 +46,7 @@ function vendaRegistrar(PDO $pdo, int $clienteId, int $usuarioId, array $quantid
     foreach ($itens as $produtoId => [$quantidade, $preco]) {
         $inserir->execute([$vendaId, $produtoId, $quantidade, $preco]);
         $baixar->execute([$quantidade, $produtoId]);
+        movimentacaoRegistrar($pdo, $produtoId, $usuarioId, 'SAIDA', $quantidade, 'Venda #' . $vendaId);
     }
 
     return $vendaId;
