@@ -24,177 +24,73 @@ $categorias = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $aviso = categoriaAviso('categorias.php');
 $token = categoriaToken();
 require_once '/var/www/stockweb/includes/layout.php';
+
+stockwebLayoutAbrir('categorias', 'Categorias');
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
+<header class="sw-page-header">
+    <?php stockwebTitulo('Categorias', 'Organize os produtos do estoque por categoria.'); ?>
+    <a href="categoria_nova.php" class="btn btn-primary"><i class="bi bi-plus-lg" aria-hidden="true"></i> Nova categoria</a>
+</header>
+<?php if ($aviso !== null): ?>
+    <?php stockwebAviso($aviso['tipo'], $aviso['mensagem']); ?>
+<?php endif; ?>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>Categorias | StockWeb</title>
-
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
-
-    <style>
-        body {
-            background-color: #f4f6fa;
-        }
-
-        .table-card {
-            border: none;
-            border-radius: 15px;
-            overflow: hidden;
-        }
-    </style>
-    <?php stockwebLayoutEstilos(); ?>
-</head>
-
-<body>
-    <?php stockwebLayoutAbrir('categorias'); ?>
-    <main class="container py-5">
-
-        <!-- Cabeçalho -->
-        <div class="d-flex flex-wrap justify-content-between
-                    align-items-center gap-3 mb-4">
-
-            <div>
-                <h1 class="fw-bold mb-1">
-                    Gerenciamento de Categorias
-                </h1>
-
-                <p class="text-muted mb-0">
-                    Organize as categorias dos produtos do estoque.
-                </p>
-            </div>
-
-            <a href="categoria_nova.php" class="btn btn-primary">
-                + Nova categoria
-            </a>
-
-        </div>
-
-        <!-- Voltar ao dashboard -->
-        <div class="mb-4">
-            <a href="dashboard.php"
-               class="btn btn-outline-secondary">
-                Voltar ao painel
-            </a>
-        </div>
-
-        <?php categoriaExibirAviso($aviso); ?>
-
-        <!-- Total de categorias -->
-        <div class="alert alert-primary">
-            Total de categorias cadastradas:
-            <strong><?= count($categorias) ?></strong>
-        </div>
-
-        <!-- Tabela -->
-        <div class="card table-card shadow-sm">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-
-                    <table class="table table-hover align-middle mb-0">
-
-                        <thead class="table-light">
-                            <tr>
-                                <th class="ps-4">ID</th>
-                                <th>Categoria</th>
-                                <th>Descrição</th>
-                                <th>Produtos ativos</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-
-                            <?php if (empty($categorias)): ?>
-
-                                <tr>
-                                    <td colspan="5"
-                                        class="text-center py-4">
-                                        Nenhuma categoria cadastrada.
-                                    </td>
-                                </tr>
-
-                            <?php else: ?>
-
-                                <?php foreach ($categorias as $categoria): ?>
-
-                                    <tr>
-
-                                        <td class="ps-4">
-                                            <?= (int) $categoria['id'] ?>
-                                        </td>
-
-                                        <td class="fw-semibold">
-                                            <?= e($categoria['nome']) ?>
-                                        </td>
-
-                                        <td>
-                                            <?= e($categoria['descricao'] ?? '-') ?>
-                                        </td>
-
-                                        <td>
-                                            <span class="badge bg-primary">
-                                                <?= (int) $categoria['total_produtos'] ?>
-                                            </span>
-                                        </td>
-
-                                        <td>
-                                            <div class="d-flex flex-wrap gap-2">
-                                                <a href="categoria_editar.php?id=<?= (int) $categoria['id'] ?>"
-                                                   class="btn btn-outline-primary btn-sm">
-                                                    Editar
-                                                </a>
-                                                <?php if ((int) $categoria['total_vinculos'] > 0): ?>
-                                                    <button type="button" class="btn btn-outline-danger btn-sm"
-                                                            disabled aria-describedby="vinculos-<?= (int) $categoria['id'] ?>">
-                                                        Excluir
-                                                    </button>
-                                                    <small id="vinculos-<?= (int) $categoria['id'] ?>" class="text-muted w-100">
-                                                        Há produtos vinculados.
-                                                    </small>
-                                                <?php else: ?>
-                                                    <form method="POST" action="categoria_excluir.php"
-                                                          onsubmit="return confirm('Excluir esta categoria?');">
-                                                        <input type="hidden" name="csrf_token" value="<?= e($token) ?>">
-                                                        <input type="hidden" name="id" value="<?= (int) $categoria['id'] ?>">
-                                                        <button type="submit" class="btn btn-outline-danger btn-sm">
-                                                            Excluir
-                                                        </button>
-                                                    </form>
-                                                <?php endif; ?>
-                                            </div>
-                                        </td>
-
-                                    </tr>
-
-                                <?php endforeach; ?>
-
+<section class="sw-panel" aria-label="Cadastro de categorias">
+    <?php stockwebTabelaCabecalho('Categorias cadastradas', count($categorias)); ?>
+    <div class="table-responsive sw-table-scroll" tabindex="0" role="region" aria-label="Tabela de categorias">
+        <table class="table table-hover align-middle sw-table">
+            <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Categoria</th>
+                    <th scope="col">Descrição</th>
+                    <th scope="col" class="text-end">Produtos ativos</th>
+                    <th scope="col">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (!$categorias): ?>
+                    <tr><td colspan="5"><?php stockwebEstadoVazio('tags', 'Nenhuma categoria cadastrada.'); ?></td></tr>
+                <?php endif; ?>
+                <?php foreach ($categorias as $categoria): ?>
+                    <?php $id = (int) $categoria['id']; ?>
+                    <tr>
+                        <td>#<?= $id ?></td>
+                        <th scope="row">
+                            <span class="sw-row-name">
+                                <span class="sw-icon-tile sw-tone-indigo"><i class="bi bi-tag" aria-hidden="true"></i></span>
+                                <?= stockwebEscapar($categoria['nome']) ?>
+                            </span>
+                        </th>
+                        <td><?= stockwebEscapar($categoria['descricao'] ?? '—') ?></td>
+                        <td class="text-end"><?= (int) $categoria['total_produtos'] ?></td>
+                        <td>
+                            <div class="sw-row-actions">
+                                <a href="categoria_editar.php?id=<?= $id ?>" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-pencil" aria-hidden="true"></i> Editar
+                                </a>
+                                <?php if ((int) $categoria['total_vinculos'] > 0): ?>
+                                    <button type="button" class="btn btn-outline-danger btn-sm"
+                                            disabled aria-describedby="vinculos-<?= $id ?>">Excluir</button>
+                                <?php else: ?>
+                                    <form method="POST" action="categoria_excluir.php"
+                                          onsubmit="return confirm(this.dataset.confirmacao);"
+                                          data-confirmacao="Excluir a categoria «<?= stockwebEscapar($categoria['nome']) ?>»?">
+                                        <input type="hidden" name="csrf_token" value="<?= stockwebEscapar($token) ?>">
+                                        <input type="hidden" name="id" value="<?= $id ?>">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">Excluir</button>
+                                    </form>
+                                <?php endif; ?>
+                            </div>
+                            <?php if ((int) $categoria['total_vinculos'] > 0): ?>
+                                <small id="vinculos-<?= $id ?>" class="sw-row-hint">Há produtos vinculados.</small>
                             <?php endif; ?>
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-            </div>
-        </div>
-
-    </main>
-
-    <footer class="text-center text-muted py-4">
-        <small>
-            StockWeb © 2026 — Gerenciamento de Estoque
-        </small>
-    </footer>
-
-    <?php stockwebLayoutFechar(); ?>
-</body>
-</html>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</section>
+<?php stockwebConfirmacaoExclusao(); ?>
+<?php stockwebLayoutFechar(); ?>

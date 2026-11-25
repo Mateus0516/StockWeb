@@ -34,16 +34,6 @@ function categoriaAviso($destino) {
     return $aviso;
 }
 
-function categoriaExibirAviso($aviso) {
-    if ($aviso !== null) {
-        ?>
-        <div class="alert alert-<?= e($aviso['tipo']) ?>" role="alert">
-            <?= e($aviso['mensagem']) ?>
-        </div>
-        <?php
-    }
-}
-
 function categoriaExigirPost() {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         header('Location: categorias.php');

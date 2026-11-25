@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/venda_funcoes.php';
+require_once '/var/www/stockweb/includes/layout.php';
 require_once '/var/www/stockweb/config/database.php';
 
 $clientes = $pdo->query('SELECT id, nome, cpf FROM clientes ORDER BY nome, id')->fetchAll();
@@ -18,7 +19,7 @@ $podeVender = $clientes && $produtos;
 function vendaLinha($indice, $item, $produtos) {
     $indice = vendaEscapar($indice);
     ?>
-    <div class="row g-3 align-items-end py-3 border-bottom" data-item>
+    <div class="row g-3 align-items-end sw-sale-item" data-item>
         <div class="col-12 col-xl-4">
             <label class="form-label" for="produto-<?= $indice ?>">Produto</label>
             <select class="form-select" id="produto-<?= $indice ?>" name="itens[<?= $indice ?>][produto_id]" data-produto required>
@@ -38,12 +39,12 @@ function vendaLinha($indice, $item, $produtos) {
                    min="1" max="2147483647" step="1" value="<?= (int) $item['quantidade'] ?: '' ?>" data-quantidade required>
         </div>
         <div class="col-7 col-sm-3 col-xl-2">
-            <span class="d-block mb-2">Preço unitário</span>
-            <output class="d-block pb-2 text-nowrap" data-preco>—</output>
+            <span class="form-label d-block">Preço unitário</span>
+            <output class="d-block pb-2" data-preco>—</output>
         </div>
         <div class="col-7 col-sm-3 col-xl-2">
-            <span class="d-block mb-2">Subtotal</span>
-            <output class="d-block pb-2 fw-semibold text-nowrap" data-subtotal>—</output>
+            <span class="form-label d-block">Subtotal</span>
+            <output class="d-block pb-2 fw-semibold" data-subtotal>—</output>
         </div>
         <div class="col-5 col-sm-3 col-xl-2 text-end">
             <button class="btn btn-outline-danger btn-sm" type="button" data-remover>Remover item</button>
@@ -52,54 +53,59 @@ function vendaLinha($indice, $item, $produtos) {
     <?php
 }
 
-vendaCabecalho('Nova venda', $aviso);
+stockwebLayoutAbrir('vendas', 'Nova venda');
 ?>
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-            <h1 class="fw-bold mb-0">Nova venda</h1>
-            <a href="vendas.php" class="btn btn-outline-secondary">Voltar às vendas</a>
+<header class="sw-page-header">
+    <?php stockwebTitulo('Nova venda', 'Selecione o cliente, adicione os produtos e confira o total.'); ?>
+    <a href="vendas.php" class="btn btn-outline-secondary">Voltar às vendas</a>
+</header>
+<?php if ($aviso !== null): ?>
+    <?php stockwebAviso($aviso['tipo'], $aviso['mensagem']); ?>
+<?php endif; ?>
+
+<?php if (!$podeVender): ?>
+    <?php stockwebAviso('warning', !$clientes ? 'Cadastre um cliente antes de registrar uma venda.' : 'Nenhum produto ativo com estoque disponível.'); ?>
+<?php else: ?>
+    <form class="sw-panel sw-form-panel" action="venda_salvar.php" method="POST"
+          id="venda-form" data-max-itens="<?= VENDA_MAX_ITENS ?>" data-max-centavos="<?= VENDA_MAX_CENTAVOS ?>">
+        <input type="hidden" name="csrf_token" value="<?= vendaEscapar(vendaToken()) ?>">
+        <div class="sw-form-section">
+            <h2 class="sw-form-kicker"><span class="sw-icon-tile sw-tone-indigo"><i class="bi bi-person" aria-hidden="true"></i></span> Identificação da venda</h2>
         </div>
-        <?php if (!$podeVender): ?>
-            <div class="alert alert-warning" role="status">
-                <?= !$clientes ? 'Cadastre um cliente antes de registrar uma venda.' : 'Nenhum produto ativo com estoque disponível.' ?>
-            </div>
-        <?php else: ?>
-            <form class="card border-0 rounded-4 shadow-sm p-3 p-md-4" action="venda_salvar.php" method="POST"
-                  id="venda-form" data-max-itens="<?= VENDA_MAX_ITENS ?>" data-max-centavos="<?= VENDA_MAX_CENTAVOS ?>">
-                <input type="hidden" name="csrf_token" value="<?= vendaEscapar(vendaToken()) ?>">
-                <div class="mb-4">
-                    <label for="cliente_id" class="form-label fw-semibold">Cliente</label>
-                    <select class="form-select" id="cliente_id" name="cliente_id" required>
-                        <option value="">Selecione um cliente</option>
-                        <?php foreach ($clientes as $cliente): ?>
-                            <option value="<?= (int) $cliente['id'] ?>"
-                                    <?= (int) $cliente['id'] === ($dados['cliente_id'] ?? null) ? 'selected' : '' ?>>
-                                <?= vendaEscapar($cliente['nome']) ?> (<?= vendaEscapar($cliente['cpf']) ?>)
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+        <div class="mb-4">
+            <label for="cliente_id" class="form-label fw-semibold">Cliente</label>
+            <select class="form-select" id="cliente_id" name="cliente_id" required>
+                <option value="">Selecione um cliente</option>
+                <?php foreach ($clientes as $cliente): ?>
+                    <option value="<?= (int) $cliente['id'] ?>"
+                            <?= (int) $cliente['id'] === ($dados['cliente_id'] ?? null) ? 'selected' : '' ?>>
+                        <?= vendaEscapar($cliente['nome']) ?> (<?= vendaEscapar($cliente['cpf']) ?>)
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
 
-                <h2 class="h5 mb-0">Itens da venda</h2>
-                <div id="venda-itens">
-                    <?php foreach (array_values($linhas) as $indice => $item): ?>
-                        <?php vendaLinha($indice, $item, $produtos); ?>
-                    <?php endforeach; ?>
-                </div>
-                <template id="venda-item-template">
-                    <?php vendaLinha('novo', ['produto_id' => false, 'quantidade' => 1], $produtos); ?>
-                </template>
+        <h2 class="sw-section-title">Itens da venda</h2>
+        <div id="venda-itens">
+            <?php foreach (array_values($linhas) as $indice => $item): ?>
+                <?php vendaLinha($indice, $item, $produtos); ?>
+            <?php endforeach; ?>
+        </div>
+        <template id="venda-item-template">
+            <?php vendaLinha('novo', ['produto_id' => false, 'quantidade' => 1], $produtos); ?>
+        </template>
 
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4">
-                    <button type="button" class="btn btn-outline-primary" id="venda-adicionar" disabled>
-                        <i class="bi bi-plus-lg" aria-hidden="true"></i> Adicionar produto
-                    </button>
-                    <div class="fs-5 fw-bold">Total <output id="venda-total">R$ 0,00</output></div>
-                </div>
-                <p id="venda-erro" class="text-danger mt-3 mb-0" role="status" hidden></p>
-                <div class="d-flex justify-content-end mt-4">
-                    <button type="submit" class="btn btn-primary" id="venda-concluir">Concluir venda</button>
-                </div>
-            </form>
-            <script src="assets/js/venda.js" defer></script>
-        <?php endif; ?>
-<?php vendaRodape();
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4">
+            <button type="button" class="btn btn-outline-primary" id="venda-adicionar" disabled>
+                <i class="bi bi-plus-lg" aria-hidden="true"></i> Adicionar produto
+            </button>
+            <div class="sw-sale-total">Total <output id="venda-total">R$ 0,00</output></div>
+        </div>
+        <p id="venda-erro" class="text-danger mt-3 mb-0" role="status" hidden></p>
+        <div class="sw-form-actions">
+            <button type="submit" class="btn btn-primary" id="venda-concluir">Concluir venda</button>
+        </div>
+    </form>
+    <script src="assets/js/venda.js" defer></script>
+<?php endif; ?>
+<?php stockwebLayoutFechar(); ?>

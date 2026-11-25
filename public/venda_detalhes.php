@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/venda_funcoes.php';
+require_once '/var/www/stockweb/includes/layout.php';
 
 $id = vendaInteiro($_GET['id'] ?? null);
 if ($id === false) {
@@ -31,51 +32,59 @@ $stmt = $pdo->prepare('
 $stmt->execute([$id]);
 $itens = $stmt->fetchAll();
 
-vendaCabecalho('Detalhes da venda', vendaAviso('venda_detalhes.php?id=' . $id));
+$aviso = vendaAviso('venda_detalhes.php?id=' . $id);
+stockwebLayoutAbrir('vendas', 'Detalhes da venda');
 ?>
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-            <h1 class="fw-bold mb-0">Venda #<?= $id ?></h1>
-            <a href="vendas.php" class="btn btn-outline-secondary">Voltar às vendas</a>
-        </div>
-        <div class="card border-0 rounded-4 shadow-sm overflow-hidden">
-            <div class="card-body p-4">
-                <dl class="row g-3 mb-0">
-                    <div class="col-sm-6 col-xl-3"><dt>Cliente</dt><dd><?= vendaEscapar($venda['cliente']) ?></dd></div>
-                    <div class="col-sm-6 col-xl-3"><dt>Vendedor</dt><dd><?= vendaEscapar($venda['vendedor']) ?></dd></div>
-                    <div class="col-sm-6 col-xl-3"><dt>Data</dt><dd><?= vendaEscapar(vendaData($venda['data_venda'])) ?></dd></div>
-                    <div class="col-sm-6 col-xl-3"><dt>Status</dt><dd><?= vendaEscapar($venda['status']) ?></dd></div>
-                </dl>
-            </div>
-            <div class="table-responsive">
-                <table class="table align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th scope="col" class="ps-4">Produto</th>
-                            <th scope="col" class="text-end">Quantidade</th>
-                            <th scope="col" class="text-end text-nowrap">Preço unitário</th>
-                            <th scope="col" class="text-end pe-4">Subtotal</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (!$itens): ?>
-                            <tr><td colspan="4" class="text-center text-muted py-4">Nenhum item registrado.</td></tr>
-                        <?php endif; ?>
-                        <?php foreach ($itens as $item): ?>
-                            <tr>
-                                <th scope="row" class="ps-4"><?= vendaEscapar($item['nome']) ?></th>
-                                <td class="text-end"><?= (int) $item['quantidade'] ?></td>
-                                <td class="text-end text-nowrap"><?= vendaMoeda($item['preco_unitario']) ?></td>
-                                <td class="text-end text-nowrap pe-4"><?= vendaMoeda($item['subtotal']) ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                    <tfoot class="table-light">
-                        <tr>
-                            <th scope="row" colspan="3" class="text-end">Total da venda</th>
-                            <td class="text-end text-nowrap fw-bold pe-4"><?= vendaMoeda($venda['valor_total']) ?></td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-        </div>
-<?php vendaRodape();
+<header class="sw-page-header">
+    <?php stockwebTitulo('Venda #' . $id, 'Consulte os itens, as quantidades e o valor registrado.'); ?>
+    <a href="vendas.php" class="btn btn-outline-secondary">Voltar às vendas</a>
+</header>
+<?php if ($aviso !== null): ?>
+    <?php stockwebAviso($aviso['tipo'], $aviso['mensagem']); ?>
+<?php endif; ?>
+<div class="sw-panel sw-form-panel mb-3">
+    <div class="sw-form-section">
+        <h2 class="sw-form-kicker"><span class="sw-icon-tile sw-tone-indigo"><i class="bi bi-receipt" aria-hidden="true"></i></span> Dados da venda</h2>
+    </div>
+    <dl class="row g-3 mb-0 sw-sale-details">
+            <div class="col-sm-6 col-xl-3"><dt>Cliente</dt><dd><?= vendaEscapar($venda['cliente']) ?></dd></div>
+            <div class="col-sm-6 col-xl-3"><dt>Vendedor</dt><dd><?= vendaEscapar($venda['vendedor']) ?></dd></div>
+            <div class="col-sm-6 col-xl-3"><dt>Data</dt><dd><?= vendaEscapar(vendaData($venda['data_venda'])) ?></dd></div>
+            <div class="col-sm-6 col-xl-3"><dt>Status</dt><dd><?php stockwebStatusVenda($venda['status']); ?></dd></div>
+    </dl>
+</div>
+<section class="sw-panel" aria-label="Itens da venda">
+    <?php stockwebTabelaCabecalho('Itens da venda', count($itens)); ?>
+    <div class="table-responsive sw-table-scroll" tabindex="0" role="region" aria-label="Tabela de itens da venda">
+        <table class="table align-middle sw-table">
+            <thead>
+                <tr>
+                    <th scope="col">Produto</th>
+                    <th scope="col" class="text-end">Quantidade</th>
+                    <th scope="col" class="text-end text-nowrap">Preço unitário</th>
+                    <th scope="col" class="text-end">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (!$itens): ?>
+                    <tr><td colspan="4"><?php stockwebEstadoVazio('cart3', 'Nenhum item registrado.'); ?></td></tr>
+                <?php endif; ?>
+                <?php foreach ($itens as $item): ?>
+                    <tr>
+                        <th scope="row"><?= vendaEscapar($item['nome']) ?></th>
+                        <td class="text-end"><?= (int) $item['quantidade'] ?></td>
+                        <td class="text-end text-nowrap"><?= vendaMoeda($item['preco_unitario']) ?></td>
+                        <td class="text-end text-nowrap"><?= vendaMoeda($item['subtotal']) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th scope="row" colspan="3" class="text-end">Total da venda</th>
+                    <td class="text-end text-nowrap fw-bold"><?= vendaMoeda($venda['valor_total']) ?></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</section>
+<?php stockwebLayoutFechar(); ?>

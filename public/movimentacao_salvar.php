@@ -9,14 +9,14 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $token = $_POST['csrf_token'] ?? null;
 if (!is_string($token) || !hash_equals(movimentacaoToken(), $token)) {
     http_response_code(403);
-    movimentacaoCabecalho('Nova movimentação', [
-        'tipo' => 'danger',
-        'mensagem' => 'Formulário inválido. Abra um novo formulário e tente novamente.',
-    ]);
+    require_once '/var/www/stockweb/includes/layout.php';
+    stockwebLayoutAbrir('movimentacoes', 'Nova movimentação');
     ?>
+    <header class="sw-page-header"><?php stockwebTitulo('Nova movimentação'); ?></header>
+    <?php stockwebAviso('danger', 'Formulário inválido. Abra um novo formulário e tente novamente.'); ?>
     <a href="movimentacao_nova.php" class="btn btn-primary">Voltar ao formulário</a>
     <?php
-    movimentacaoRodape();
+    stockwebLayoutFechar();
     exit;
 }
 

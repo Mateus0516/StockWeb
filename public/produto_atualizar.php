@@ -1,6 +1,8 @@
 <?php
 session_start();
 
+require_once '/var/www/stockweb/includes/layout.php';
+
 // Verifica se o usuário está autenticado
 if (!isset($_SESSION['usuario_id'])) {
     header('Location: login.php');
@@ -24,7 +26,7 @@ if (
     !hash_equals($tokenSessao, $tokenFormulario)
 ) {
     http_response_code(403);
-    exit('Formulário inválido. Atualize a página e tente novamente.');
+    stockwebErroProduto('Formulário inválido. Atualize a página e tente novamente.');
 }
 
 // Conexão com o banco de dados
@@ -92,7 +94,7 @@ if (
     $fornecedorId <= 0
 ) {
     http_response_code(422);
-    exit('Dados inválidos. Volte ao formulário e confira os campos.');
+    stockwebErroProduto('Dados inválidos. Volte ao formulário e confira os campos.');
 }
 
 try {
@@ -112,7 +114,7 @@ try {
     if ($saldoAtual === false) {
         $pdo->rollBack();
         http_response_code(404);
-        exit('Produto não encontrado ou inativo.');
+        stockwebErroProduto('Produto não encontrado ou inativo.');
     }
 
     $saldoAtual = (int) $saldoAtual;
@@ -120,7 +122,7 @@ try {
         if ($quantidade !== $quantidadeOriginal) {
             $pdo->rollBack();
             http_response_code(409);
-            exit('O estoque foi alterado enquanto você editava o produto. Abra o formulário novamente para conferir o saldo atual.');
+            stockwebErroProduto('O estoque foi alterado enquanto você editava o produto. Abra o formulário novamente para conferir o saldo atual.');
         }
 
         // Uma edição dos demais campos preserva movimentações ocorridas desde a abertura do formulário.
@@ -139,7 +141,7 @@ try {
     if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
         $pdo->rollBack();
         http_response_code(422);
-        exit('Categoria inválida.');
+        stockwebErroProduto('Categoria inválida.');
     }
 
     // Verifica se o fornecedor existe
@@ -154,7 +156,7 @@ try {
     if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
         $pdo->rollBack();
         http_response_code(422);
-        exit('Fornecedor inválido.');
+        stockwebErroProduto('Fornecedor inválido.');
     }
 
     // Atualiza as informações do produto
@@ -213,5 +215,5 @@ try {
 
     http_response_code(500);
 
-    exit('Erro ao atualizar o produto. Tente novamente.');
+    stockwebErroProduto('Erro ao atualizar o produto. Tente novamente.');
 }

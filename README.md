@@ -23,7 +23,7 @@ Ambiente local conferido com PHP 8.3.36, MySQL 8.0.46, Apache 2.4.69 e Docker CL
 | Módulo | O que permite fazer |
 | --- | --- |
 | Autenticação | Entrar com e-mail e senha e encerrar a sessão. |
-| Dashboard | Consultar produtos ativos, clientes cadastrados, vendas concluídas, alertas de estoque baixo e produtos recentes. |
+| Dashboard | Consultar produtos ativos, clientes cadastrados, total de vendas concluídas, vendas por dia, situação do estoque, movimentações recentes, alertas de estoque baixo e produtos recentes. |
 | Produtos | Cadastrar, consultar, editar e desativar produtos, incluindo preço, saldo, estoque mínimo, categoria e fornecedor. |
 | Categorias | Cadastrar, consultar, editar e excluir categorias sem produtos vinculados. |
 | Fornecedores | Cadastrar, consultar, editar e excluir fornecedores sem produtos vinculados. |
@@ -42,12 +42,12 @@ Ambiente local conferido com PHP 8.3.36, MySQL 8.0.46, Apache 2.4.69 e Docker CL
 | [database/seed.sql](database/seed.sql) | Carrega dados fictícios para demonstração local. |
 | [includes/](includes/) | Layout, sidebar, consultas de relatórios e rotinas compartilhadas de vendas e estoque. |
 | [public/](public/) | Raiz pública do Apache. Contém as rotas, telas e formulários. |
-| [public/assets/](public/assets/) | JavaScript da venda e estilos da sidebar e da impressão dos relatórios. |
+| [public/assets/](public/assets/) | Interface compartilhada, JavaScript da venda, estilos de impressão e arquivos locais de Bootstrap, Bootstrap Icons e Inter. |
 
 ## Pré-requisitos
 
 - Git e Docker com o serviço em execução, como Docker Desktop no macOS ou Windows ou Docker Engine no Linux.
-- Navegador moderno e acesso à internet para baixar as imagens Docker e carregar o Bootstrap e o Bootstrap Icons via CDN.
+- Navegador moderno. A instalação inicial pode exigir internet para baixar as imagens Docker. Os recursos visuais são servidos pelo próprio StockWeb.
 - Terminal Bash ou Zsh. No Windows, os comandos abaixo podem ser usados no WSL com a integração do Docker habilitada.
 - Portas locais **8081** e **3308** livres. O cliente MySQL usado no tutorial já existe no container. PHP, Apache e MySQL no computador anfitrião são opcionais.
 

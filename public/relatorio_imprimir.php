@@ -7,18 +7,12 @@ $geradoEm = new DateTimeImmutable('now', new DateTimeZone('America/Sao_Paulo'));
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= relatorioEscapar($titulos[$tipo]) ?> | StockWeb</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="assets/css/relatorios-impressao.css" rel="stylesheet">
-</head>
+<?php stockwebHead($titulos[$tipo], true); ?>
 <body class="report-print">
     <main class="container py-4">
         <header class="border-bottom pb-3 mb-3">
-            <p class="fw-bold text-primary mb-1">StockWeb</p>
-            <h1 class="h2"><?= relatorioEscapar($titulos[$tipo]) ?></h1>
+            <div class="sw-brand mb-2"><?php stockwebMarca(); ?></div>
+            <h1 class="h2 fw-bold"><?= relatorioEscapar($titulos[$tipo]) ?></h1>
             <p class="mb-0">Gerado em <?= $geradoEm->format('d/m/Y H:i') ?> (horário de Brasília)</p>
         </header>
         <div class="d-print-none d-flex flex-wrap gap-2 mb-4">
@@ -29,7 +23,7 @@ $geradoEm = new DateTimeImmutable('now', new DateTimeZone('America/Sao_Paulo'));
         </div>
 
         <?php if ($erro !== null): ?>
-            <div class="alert alert-danger" role="alert"><?= relatorioEscapar($erro) ?></div>
+            <?php stockwebAviso('danger', $erro); ?>
         <?php else: ?>
             <dl class="row mb-3">
                 <?php foreach (relatorioDescricaoFiltros($tipo, $campos, $filtros, $resultado['opcoes']) as $rotulo => $valor): ?>
@@ -49,7 +43,7 @@ $geradoEm = new DateTimeImmutable('now', new DateTimeZone('America/Sao_Paulo'));
                 <?php endif; ?>
                 <?php relatorioIndicadores($tipo, $resultado['totais']); ?>
                 <?php if ($tipo !== 'resumo'): ?>
-                    <?php relatorioTabela($tipo, $resultado['linhas'], isset($filtros['produto_id'])); ?>
+                    <?php relatorioTabela($tipo, $resultado['linhas'], isset($filtros['produto_id']), true); ?>
                 <?php endif; ?>
             <?php endif; ?>
         <?php endif; ?>

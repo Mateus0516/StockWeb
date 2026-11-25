@@ -35,333 +35,79 @@ $stmt = $pdo->query("
 
 $produtos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Proteção contra HTML malicioso
-function e($valor) {
-    return htmlspecialchars(
-        (string) $valor,
-        ENT_QUOTES,
-        'UTF-8'
-    );
-}
-
-// Mensagens de sucesso
-$produtoAtualizado = isset($_GET['atualizado'])
-    && $_GET['atualizado'] === '1';
-
-$produtoExcluido = isset($_GET['excluido'])
-    && $_GET['excluido'] === '1';
 require_once '/var/www/stockweb/includes/layout.php';
+
+stockwebLayoutAbrir('produtos', 'Produtos');
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-
-<head>
-    <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>Produtos | StockWeb</title>
-
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
-
-    <style>
-        body {
-            background-color: #f4f6fa;
-        }
-
-        .table-card {
-            border: none;
-            border-radius: 15px;
-            overflow: hidden;
-        }
-
-        .table th {
-            white-space: nowrap;
-        }
-
-        .table td {
-            vertical-align: middle;
-        }
-
-        .acoes {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .acoes form {
-            margin: 0;
-        }
-
-        .acoes .btn {
-            white-space: nowrap;
-        }
-    </style>
-    <?php stockwebLayoutEstilos(); ?>
-</head>
-
-<body>
-    <?php stockwebLayoutAbrir('produtos'); ?>
-    <main class="container py-5">
-
-        <!-- Cabeçalho -->
-        <div class="d-flex flex-wrap justify-content-between
-                    align-items-center gap-3 mb-4">
-
-            <div>
-                <h1 class="fw-bold mb-1">
-                    Gerenciamento de Produtos
-                </h1>
-
-                <p class="text-muted mb-0">
-                    Consulte, cadastre, edite e exclua produtos do estoque.
-                </p>
-            </div>
-
-            <a href="produto_novo.php"
-               class="btn btn-primary">
-                + Novo produto
-            </a>
-
-        </div>
-
-        <!-- Voltar ao dashboard -->
-        <div class="mb-4">
-            <a href="dashboard.php"
-               class="btn btn-outline-secondary">
-                Voltar ao painel
-            </a>
-        </div>
-
-        <!-- Mensagem de atualização -->
-        <?php if ($produtoAtualizado): ?>
-
-            <div class="alert alert-success alert-dismissible fade show"
-                 role="alert">
-
-                Produto atualizado com sucesso!
-
-                <button
-                    type="button"
-                    class="btn-close"
-                    data-bs-dismiss="alert"
-                    aria-label="Fechar">
-                </button>
-
-            </div>
-
-        <?php endif; ?>
-
-        <!-- Mensagem de exclusão -->
-        <?php if ($produtoExcluido): ?>
-
-            <div class="alert alert-success alert-dismissible fade show"
-                 role="alert">
-
-                Produto excluído com sucesso!
-
-                <button
-                    type="button"
-                    class="btn-close"
-                    data-bs-dismiss="alert"
-                    aria-label="Fechar">
-                </button>
-
-            </div>
-
-        <?php endif; ?>
-
-        <!-- Total de produtos -->
-        <div class="alert alert-primary">
-
-            Total de produtos ativos:
-
-            <strong>
-                <?= count($produtos) ?>
-            </strong>
-
-        </div>
-
-        <!-- Tabela de produtos -->
-        <div class="card table-card shadow-sm">
-
-            <div class="card-body p-0">
-
-                <div class="table-responsive">
-
-                    <table class="table table-hover align-middle mb-0">
-
-                        <thead class="table-light">
-
-                            <tr>
-                                <th class="ps-4">ID</th>
-                                <th>Produto</th>
-                                <th>Categoria</th>
-                                <th>Fornecedor</th>
-                                <th>Preço</th>
-                                <th>Quantidade</th>
-                                <th>Status</th>
-                                <th>Ações</th>
-                            </tr>
-
-                        </thead>
-
-                        <tbody>
-
-                            <?php if (empty($produtos)): ?>
-
-                                <tr>
-                                    <td colspan="8"
-                                        class="text-center py-4">
-
-                                        Nenhum produto cadastrado.
-
-                                    </td>
-                                </tr>
-
-                            <?php else: ?>
-
-                                <?php foreach ($produtos as $produto): ?>
-
-                                    <?php
-                                    $estoqueBaixo =
-                                        (int) $produto['quantidade']
-                                        <= (int) $produto['estoque_minimo'];
-                                    ?>
-
-                                    <tr>
-
-                                        <!-- ID -->
-                                        <td class="ps-4">
-                                            <?= (int) $produto['id'] ?>
-                                        </td>
-
-                                        <!-- Nome -->
-                                        <td class="fw-semibold">
-                                            <?= e($produto['nome']) ?>
-                                        </td>
-
-                                        <!-- Categoria -->
-                                        <td>
-                                            <?= e($produto['categoria']) ?>
-                                        </td>
-
-                                        <!-- Fornecedor -->
-                                        <td>
-                                            <?= e($produto['fornecedor']) ?>
-                                        </td>
-
-                                        <!-- Preço -->
-                                        <td>
-                                            R$
-                                            <?= number_format(
-                                                (float) $produto['preco'],
-                                                2,
-                                                ',',
-                                                '.'
-                                            ) ?>
-                                        </td>
-
-                                        <!-- Quantidade -->
-                                        <td>
-                                            <?= (int) $produto['quantidade'] ?>
-                                        </td>
-
-                                        <!-- Status -->
-                                        <td>
-
-                                            <?php if ($estoqueBaixo): ?>
-
-                                                <span class="badge bg-danger">
-                                                    Estoque baixo
-                                                </span>
-
-                                            <?php else: ?>
-
-                                                <span class="badge bg-success">
-                                                    Disponível
-                                                </span>
-
-                                            <?php endif; ?>
-
-                                        </td>
-
-                                        <!-- Ações -->
-                                        <td>
-
-                                            <div class="acoes">
-
-                                                <!-- Editar -->
-                                                <a
-                                                    href="produto_editar.php?id=<?= (int) $produto['id'] ?>"
-                                                    class="btn btn-outline-primary btn-sm"
-                                                >
-                                                    Editar
-                                                </a>
-
-                                                <!-- Excluir -->
-                                                <form
-                                                    action="produto_excluir.php"
-                                                    method="POST"
-                                                    onsubmit="return confirm('Tem certeza que deseja excluir este produto?');"
-                                                >
-
-                                                    <input
-                                                        type="hidden"
-                                                        name="id"
-                                                        value="<?= (int) $produto['id'] ?>"
-                                                    >
-
-                                                    <input
-                                                        type="hidden"
-                                                        name="csrf_token"
-                                                        value="<?= e($_SESSION['csrf_token']) ?>"
-                                                    >
-
-                                                    <button
-                                                        type="submit"
-                                                        class="btn btn-outline-danger btn-sm"
-                                                    >
-                                                        Excluir
-                                                    </button>
-
-                                                </form>
-
-                                            </div>
-
-                                        </td>
-
-                                    </tr>
-
-                                <?php endforeach; ?>
-
-                            <?php endif; ?>
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </main>
-
-    <!-- Rodapé -->
-    <footer class="text-center text-muted py-4">
-
-        <small>
-            StockWeb © 2026 — Gerenciamento de Estoque
-        </small>
-
-    </footer>
-
-    <?php stockwebLayoutFechar(); ?>
-</body>
-</html>
+<header class="sw-page-header">
+    <?php stockwebTitulo('Produtos', 'Consulte e gerencie os itens do seu estoque.'); ?>
+    <a href="produto_novo.php" class="btn btn-primary"><i class="bi bi-plus-lg" aria-hidden="true"></i> Novo produto</a>
+</header>
+
+<?php if (($_GET['sucesso'] ?? null) === '1'): ?>
+    <?php stockwebAviso('success', 'Produto cadastrado com sucesso.', true); ?>
+<?php endif; ?>
+<?php if (($_GET['atualizado'] ?? null) === '1'): ?>
+    <?php stockwebAviso('success', 'Produto atualizado com sucesso!', true); ?>
+<?php endif; ?>
+<?php if (($_GET['excluido'] ?? null) === '1'): ?>
+    <?php stockwebAviso('success', 'Produto excluído com sucesso!', true); ?>
+<?php endif; ?>
+
+<section class="sw-panel" aria-label="Catálogo de produtos">
+    <?php stockwebTabelaCabecalho('Produtos ativos', count($produtos)); ?>
+    <div class="table-responsive sw-table-scroll" tabindex="0" role="region" aria-label="Tabela de produtos ativos">
+        <table class="table table-hover align-middle sw-table">
+            <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Produto</th>
+                    <th scope="col">Categoria</th>
+                    <th scope="col">Fornecedor</th>
+                    <th scope="col" class="text-end">Preço</th>
+                    <th scope="col" class="text-end">Quantidade</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (!$produtos): ?>
+                    <tr><td colspan="8"><?php stockwebEstadoVazio('box-seam', 'Nenhum produto ativo cadastrado.'); ?></td></tr>
+                <?php endif; ?>
+                <?php foreach ($produtos as $produto): ?>
+                    <?php $baixo = (int) $produto['quantidade'] <= (int) $produto['estoque_minimo']; ?>
+                    <tr>
+                        <td>#<?= (int) $produto['id'] ?></td>
+                        <th scope="row">
+                            <span class="sw-row-name">
+                                <span class="sw-icon-tile sw-tone-indigo"><i class="bi bi-box-seam" aria-hidden="true"></i></span>
+                                <?= stockwebEscapar($produto['nome']) ?>
+                            </span>
+                        </th>
+                        <td><?= stockwebEscapar($produto['categoria']) ?></td>
+                        <td><?= stockwebEscapar($produto['fornecedor']) ?></td>
+                        <td class="text-end text-nowrap">R$ <?= number_format((float) $produto['preco'], 2, ',', '.') ?></td>
+                        <td class="text-end"><?= (int) $produto['quantidade'] ?></td>
+                        <td><?php stockwebStatus($baixo ? 'Estoque baixo' : 'Disponível', $baixo ? 'danger' : 'success'); ?></td>
+                        <td>
+                            <div class="sw-row-actions">
+                                <a href="produto_editar.php?id=<?= (int) $produto['id'] ?>" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-pencil" aria-hidden="true"></i> Editar
+                                </a>
+                                <form action="produto_excluir.php" method="POST"
+                                      onsubmit="return confirm(this.dataset.confirmacao);"
+                                      data-confirmacao="Excluir «<?= stockwebEscapar($produto['nome']) ?>» da lista de produtos ativos?">
+                                    <input type="hidden" name="id" value="<?= (int) $produto['id'] ?>">
+                                    <input type="hidden" name="csrf_token" value="<?= stockwebEscapar($_SESSION['csrf_token']) ?>">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Excluir</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</section>
+<?php stockwebConfirmacaoExclusao(); ?>
+<?php stockwebLayoutFechar(); ?>

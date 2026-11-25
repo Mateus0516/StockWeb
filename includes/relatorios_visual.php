@@ -13,6 +13,7 @@ if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'HEAD'], true)) {
 }
 
 require_once __DIR__ . '/relatorios_consultas.php';
+require_once __DIR__ . '/layout.php';
 require_once __DIR__ . '/../config/database.php';
 
 function relatorioEscapar($valor): string {
@@ -120,12 +121,12 @@ function relatorioDescricaoFiltros(string $tipo, array $campos, array $filtros, 
 
 function relatorioCards(array $indicadores): void {
     ?>
-    <dl class="row row-cols-2 row-cols-lg-3 row-cols-xxl-4 g-3 mb-4">
+    <dl class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xxl-4 g-3 mb-4">
         <?php foreach ($indicadores as $rotulo => $valor): ?>
             <div class="col">
-                <div class="card h-100 border-0 rounded-4 shadow-sm p-3 report-card">
-                    <dt class="small text-secondary fw-semibold"><?= relatorioEscapar($rotulo) ?></dt>
-                    <dd class="fs-5 fw-bold mb-0 text-break"><?= relatorioEscapar($valor) ?></dd>
+                <div class="sw-panel sw-report-metric report-card">
+                    <dt><?= relatorioEscapar($rotulo) ?></dt>
+                    <dd><?= relatorioEscapar($valor) ?></dd>
                 </div>
             </div>
         <?php endforeach; ?>
@@ -146,15 +147,15 @@ function relatorioIndicadores(string $tipo, array $totais): void {
 
     if ($tipo === 'resumo') {
         ?>
-        <h2 class="h5">Situação atual</h2>
+        <h2 class="sw-section-title mb-3">Situação atual</h2>
         <?php relatorioCards([
             'Produtos ativos' => relatorioNumero($totais['ativos']),
             'Produtos ativos no mínimo ou abaixo' => relatorioNumero($totais['estoque_baixo']),
             'Clientes cadastrados' => relatorioNumero($totais['clientes']),
         ]); ?>
-        <h2 class="h5">Vendas concluídas no período</h2>
+        <h2 class="sw-section-title mb-3">Vendas concluídas no período</h2>
         <?php relatorioCards(['Vendas concluídas' => relatorioNumero($totais['concluidas'])] + $vendas($totais)); ?>
-        <h2 class="h5">Movimentações registradas no período</h2>
+        <h2 class="sw-section-title mb-3">Movimentações registradas no período</h2>
         <?php relatorioCards($movimentos($totais));
         return;
     }
@@ -171,16 +172,17 @@ function relatorioIndicadores(string $tipo, array $totais): void {
     relatorioCards($indicadores);
 }
 
-function relatorioTabela(string $tipo, array $linhas, bool $produtoFiltrado): void {
+function relatorioTabela(string $tipo, array $linhas, bool $produtoFiltrado, bool $impressao = false): void {
     $colunas = match ($tipo) {
         'estoque' => ['Produto', 'Categoria', 'Fornecedor', 'Saldo', 'Mínimo', 'Situação do estoque', 'Status'],
         'vendas' => ['Venda', 'Data e horário', 'Cliente', 'Status', 'Unidades', $produtoFiltrado ? 'Valor do produto' : 'Valor total'],
         'movimentacoes' => ['Data e horário', 'Produto', 'Tipo', 'Quantidade', 'Responsável', 'Observação'],
     };
     ?>
-    <div class="table-responsive rounded-4 report-table">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
+    <div class="table-responsive sw-table-scroll report-table"
+        <?= $impressao ? '' : 'tabindex="0" role="region" aria-label="Tabela de resultados do relatório"' ?>>
+        <table class="table table-hover align-middle sw-table">
+            <thead>
                 <tr>
                     <?php foreach ($colunas as $coluna): ?>
                         <th scope="col"><?= relatorioEscapar($coluna) ?></th>
@@ -189,7 +191,7 @@ function relatorioTabela(string $tipo, array $linhas, bool $produtoFiltrado): vo
             </thead>
             <tbody>
                 <?php if (!$linhas): ?>
-                    <tr><td colspan="<?= count($colunas) ?>" class="text-center text-secondary py-4">Nenhum resultado para os filtros aplicados.</td></tr>
+                    <tr><td colspan="<?= count($colunas) ?>"><?php stockwebEstadoVazio('file-earmark-bar-graph', 'Nenhum resultado para os filtros aplicados.'); ?></td></tr>
                 <?php endif; ?>
                 <?php foreach ($linhas as $linha): ?>
                     <?php
@@ -206,8 +208,22 @@ function relatorioTabela(string $tipo, array $linhas, bool $produtoFiltrado): vo
                     };
                     ?>
                     <tr<?= $baixo ? ' class="table-warning"' : '' ?>>
-                        <?php foreach ($valores as $valor): ?>
-                            <td class="text-break"><?= relatorioEscapar($valor) ?></td>
+                        <?php foreach ($valores as $indice => $valor): ?>
+                            <td>
+                                <?php if ($impressao): ?>
+                                    <?= relatorioEscapar($valor) ?>
+                                <?php elseif ($tipo === 'estoque' && $indice === 5): ?>
+                                    <?php stockwebStatus($valor, $baixo ? 'warning' : 'success'); ?>
+                                <?php elseif ($tipo === 'estoque' && $indice === 6): ?>
+                                    <?php stockwebStatus($valor, (int) $linha['ativo'] === 1 ? 'success' : 'neutral'); ?>
+                                <?php elseif ($tipo === 'vendas' && $indice === 3): ?>
+                                    <?php stockwebStatusVenda($linha['status']); ?>
+                                <?php elseif ($tipo === 'movimentacoes' && $indice === 2): ?>
+                                    <?php stockwebStatus($valor, $linha['tipo'] === 'ENTRADA' ? 'success' : 'warning'); ?>
+                                <?php else: ?>
+                                    <?= relatorioEscapar($valor) ?>
+                                <?php endif; ?>
+                            </td>
                         <?php endforeach; ?>
                     </tr>
                 <?php endforeach; ?>

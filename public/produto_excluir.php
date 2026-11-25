@@ -1,6 +1,8 @@
 <?php
 session_start();
 
+require_once '/var/www/stockweb/includes/layout.php';
+
 // Verifica se o usuário está autenticado
 if (!isset($_SESSION['usuario_id'])) {
     header('Location: login.php');
@@ -24,7 +26,7 @@ if (
     !hash_equals($tokenSessao, $tokenFormulario)
 ) {
     http_response_code(403);
-    exit('Formulário inválido. Atualize a página e tente novamente.');
+    stockwebErroProduto('Formulário inválido. Atualize a página e tente novamente.');
 }
 
 // Conexão com o banco de dados
@@ -38,7 +40,7 @@ $id = filter_var(
 
 if ($id === false || $id === null || $id <= 0) {
     http_response_code(422);
-    exit('ID do produto inválido.');
+    stockwebErroProduto('ID do produto inválido.');
 }
 
 try {
@@ -53,7 +55,7 @@ try {
 
     if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
         http_response_code(404);
-        exit('Produto não encontrado ou já excluído.');
+        stockwebErroProduto('Produto não encontrado ou já excluído.');
     }
 
     // Exclusão lógica: desativa o produto
@@ -75,5 +77,5 @@ try {
     );
 
     http_response_code(500);
-    exit('Não foi possível excluir o produto.');
+    stockwebErroProduto('Não foi possível excluir o produto.');
 }

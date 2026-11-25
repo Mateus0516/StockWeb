@@ -1,6 +1,8 @@
 <?php
 session_start();
 
+require_once '/var/www/stockweb/includes/layout.php';
+
 // Protege o cadastro contra acesso sem login
 if (!isset($_SESSION['usuario_id'])) {
     header('Location: login.php');
@@ -20,7 +22,7 @@ if (!is_string($tokenSessao) || $tokenSessao === '' || !is_string($tokenFormular
     !hash_equals($tokenSessao, $tokenFormulario)
 ) {
     http_response_code(403);
-    exit('Formulário inválido. Atualize a página e tente novamente.');
+    stockwebErroProduto('Formulário inválido. Atualize a página e tente novamente.');
 }
 
 require_once '/var/www/stockweb/config/database.php';
@@ -73,7 +75,7 @@ if (
     $fornecedorId <= 0
 ) {
     http_response_code(422);
-    exit('Dados inválidos. Volte ao formulário e confira os campos.');
+    stockwebErroProduto('Dados inválidos. Volte ao formulário e confira os campos.');
 }
 
 try {
@@ -85,7 +87,7 @@ try {
 
     if (!$stmt->fetchColumn()) {
         http_response_code(422);
-        exit('Categoria inválida.');
+        stockwebErroProduto('Categoria inválida.');
     }
 
     // Verifica se o fornecedor existe
@@ -96,7 +98,7 @@ try {
 
     if (!$stmt->fetchColumn()) {
         http_response_code(422);
-        exit('Fornecedor inválido.');
+        stockwebErroProduto('Fornecedor inválido.');
     }
 
     $pdo->beginTransaction();
@@ -141,6 +143,6 @@ try {
     error_log($e->getMessage());
 
     http_response_code(500);
-    exit('Não foi possível cadastrar o produto. Tente novamente.');
+    stockwebErroProduto('Não foi possível cadastrar o produto. Tente novamente.');
 }
 

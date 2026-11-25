@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/movimentacao_funcoes.php';
+require_once '/var/www/stockweb/includes/layout.php';
 require_once '/var/www/stockweb/config/database.php';
 
 function movimentacaoDataValida($valor): bool {
@@ -60,83 +61,90 @@ if (($produto !== '' && $produtoId === false) ||
     $movimentacoes = $stmt->fetchAll();
 }
 
-movimentacaoCabecalho('Movimentações de estoque', $aviso);
+stockwebLayoutAbrir('movimentacoes', 'Movimentações');
 ?>
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-            <h1 class="fw-bold mb-0">Movimentações de estoque</h1>
-            <a href="movimentacao_nova.php" class="btn btn-primary">
-                <i class="bi bi-plus-lg" aria-hidden="true"></i> Nova movimentação
-            </a>
-        </div>
+<header class="sw-page-header">
+    <?php stockwebTitulo('Movimentações', 'Consulte as entradas e saídas de produtos do estoque.'); ?>
+    <a href="movimentacao_nova.php" class="btn btn-primary">
+        <i class="bi bi-plus-lg" aria-hidden="true"></i> Nova movimentação
+    </a>
+</header>
+<?php if ($aviso !== null): ?>
+    <?php stockwebAviso($aviso['tipo'], $aviso['mensagem']); ?>
+<?php endif; ?>
 
-        <form class="card border-0 rounded-4 shadow-sm p-3 mb-4" method="GET">
-            <div class="row g-3 align-items-end">
-                <div class="col-md-6 col-xl-4">
-                    <label for="produto_id" class="form-label">Produto</label>
-                    <select class="form-select" id="produto_id" name="produto_id">
-                        <option value="">Todos os produtos</option>
-                        <?php foreach ($produtos as $item): ?>
-                            <option value="<?= (int) $item['id'] ?>" <?= (int) $item['id'] === $produtoId ? 'selected' : '' ?>>
-                                <?= movimentacaoEscapar($item['nome']) ?> (#<?= (int) $item['id'] ?>)
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="col-md-6 col-xl-2">
-                    <label for="tipo" class="form-label">Tipo</label>
-                    <select class="form-select" id="tipo" name="tipo">
-                        <option value="">Todos os tipos</option>
-                        <option value="ENTRADA" <?= $tipo === 'ENTRADA' ? 'selected' : '' ?>>Entrada</option>
-                        <option value="SAIDA" <?= $tipo === 'SAIDA' ? 'selected' : '' ?>>Saída</option>
-                    </select>
-                </div>
-                <div class="col-sm-6 col-xl-2">
-                    <label for="inicio" class="form-label">Data inicial</label>
-                    <input type="date" class="form-control" id="inicio" name="inicio"
-                           value="<?= movimentacaoDataValida($inicio) ? movimentacaoEscapar($inicio) : '' ?>">
-                </div>
-                <div class="col-sm-6 col-xl-2">
-                    <label for="fim" class="form-label">Data final</label>
-                    <input type="date" class="form-control" id="fim" name="fim"
-                           value="<?= movimentacaoDataValida($fim) ? movimentacaoEscapar($fim) : '' ?>">
-                </div>
-                <div class="col-xl-2 d-flex flex-wrap gap-2">
-                    <button type="submit" class="btn btn-primary">Filtrar</button>
-                    <a href="movimentacoes.php" class="btn btn-outline-secondary">Limpar</a>
-                </div>
-            </div>
-        </form>
-
-        <div class="card border-0 rounded-4 shadow-sm overflow-hidden">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th scope="col" class="ps-4">Data e horário</th>
-                            <th scope="col">Produto</th>
-                            <th scope="col">Tipo</th>
-                            <th scope="col" class="text-end">Quantidade</th>
-                            <th scope="col">Responsável</th>
-                            <th scope="col" class="pe-4">Observação</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (!$movimentacoes): ?>
-                            <tr><td colspan="6" class="text-center text-muted py-4">Nenhuma movimentação encontrada.</td></tr>
-                        <?php endif; ?>
-                        <?php foreach ($movimentacoes as $item): ?>
-                            <?php $entrada = $item['tipo'] === 'ENTRADA'; ?>
-                            <tr>
-                                <td class="ps-4 text-nowrap"><?= (new DateTimeImmutable($item['data_movimentacao']))->format('d/m/Y H:i:s') ?></td>
-                                <th scope="row"><?= movimentacaoEscapar($item['produto']) ?></th>
-                                <td><span class="badge <?= $entrada ? 'text-bg-success' : 'text-bg-warning' ?>"><?= $entrada ? 'Entrada' : 'Saída' ?></span></td>
-                                <td class="text-end"><?= (int) $item['quantidade'] ?></td>
-                                <td><?= movimentacaoEscapar($item['usuario']) ?></td>
-                                <td class="pe-4 text-break"><?= movimentacaoEscapar($item['observacao'] ?? '—') ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
+<form class="sw-panel sw-filter" method="GET">
+    <div class="sw-form-section">
+        <h2 class="sw-form-kicker"><i class="bi bi-sliders" aria-hidden="true"></i> Filtros</h2>
+    </div>
+    <div class="row g-3 align-items-end">
+        <div class="col-md-6 col-xxl-4">
+            <label for="produto_id" class="form-label">Produto</label>
+            <select class="form-select" id="produto_id" name="produto_id">
+                <option value="">Todos os produtos</option>
+                <?php foreach ($produtos as $item): ?>
+                    <option value="<?= (int) $item['id'] ?>" <?= (int) $item['id'] === $produtoId ? 'selected' : '' ?>>
+                        <?= movimentacaoEscapar($item['nome']) ?> (#<?= (int) $item['id'] ?>)
+                    </option>
+                <?php endforeach; ?>
+            </select>
         </div>
-<?php movimentacaoRodape();
+        <div class="col-md-6 col-xxl-2">
+            <label for="tipo" class="form-label">Tipo</label>
+            <select class="form-select" id="tipo" name="tipo">
+                <option value="">Todos os tipos</option>
+                <option value="ENTRADA" <?= $tipo === 'ENTRADA' ? 'selected' : '' ?>>Entrada</option>
+                <option value="SAIDA" <?= $tipo === 'SAIDA' ? 'selected' : '' ?>>Saída</option>
+            </select>
+        </div>
+        <div class="col-sm-6 col-xxl-2">
+            <label for="inicio" class="form-label">Data inicial</label>
+            <input type="date" class="form-control" id="inicio" name="inicio"
+                   value="<?= movimentacaoDataValida($inicio) ? movimentacaoEscapar($inicio) : '' ?>">
+        </div>
+        <div class="col-sm-6 col-xxl-2">
+            <label for="fim" class="form-label">Data final</label>
+            <input type="date" class="form-control" id="fim" name="fim"
+                   value="<?= movimentacaoDataValida($fim) ? movimentacaoEscapar($fim) : '' ?>">
+        </div>
+        <div class="col-xxl-2 d-flex flex-wrap gap-2">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-funnel" aria-hidden="true"></i> Filtrar</button>
+            <a href="movimentacoes.php" class="btn btn-outline-secondary">Limpar</a>
+        </div>
+    </div>
+</form>
+
+<section class="sw-panel" aria-label="Histórico de movimentações">
+    <?php stockwebTabelaCabecalho('Histórico de movimentações', count($movimentacoes)); ?>
+    <div class="table-responsive sw-table-scroll" tabindex="0" role="region" aria-label="Tabela de movimentações">
+        <table class="table table-hover align-middle sw-table">
+            <thead>
+                <tr>
+                    <th scope="col">Data e horário</th>
+                    <th scope="col">Produto</th>
+                    <th scope="col">Tipo</th>
+                    <th scope="col" class="text-end">Quantidade</th>
+                    <th scope="col">Responsável</th>
+                    <th scope="col">Observação</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (!$movimentacoes): ?>
+                    <tr><td colspan="6"><?php stockwebEstadoVazio('arrow-left-right', 'Nenhuma movimentação encontrada.'); ?></td></tr>
+                <?php endif; ?>
+                <?php foreach ($movimentacoes as $item): ?>
+                    <?php $entrada = $item['tipo'] === 'ENTRADA'; ?>
+                    <tr>
+                        <td class="text-nowrap"><?= (new DateTimeImmutable($item['data_movimentacao']))->format('d/m/Y H:i:s') ?></td>
+                        <th scope="row"><?= movimentacaoEscapar($item['produto']) ?></th>
+                        <td><?php stockwebStatus($entrada ? 'Entrada' : 'Saída', $entrada ? 'success' : 'warning'); ?></td>
+                        <td class="text-end"><?= (int) $item['quantidade'] ?></td>
+                        <td><?= movimentacaoEscapar($item['usuario']) ?></td>
+                        <td class="text-break"><?= movimentacaoEscapar($item['observacao'] ?? '—') ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</section>
+<?php stockwebLayoutFechar(); ?>
